@@ -124,7 +124,7 @@ const Header = () => {
           <button
             onClick={() => handleNavigation("/")}
             className={cn(
-              "w-10 h-10 rounded-xl glass-card flex items-center justify-center transition-all group",
+              "w-10 h-10 rounded-xl glass-card flex items-center justify-center transition-all group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
               currentPath === "/" 
                 ? "bg-black shadow-2xl text-white" 
                 : "hover:bg-secondary/80"
@@ -132,7 +132,8 @@ const Header = () => {
             style={currentPath === "/" ? { 
               boxShadow: `0 0 20px hsl(${preset.primary}), 0 0 40px hsl(${preset.primary} / 0.5), 0 0 60px hsl(${preset.primary} / 0.3)` 
             } : {}}
-            title="Home"
+            aria-label="Home"
+            aria-current={currentPath === "/" ? "page" : undefined}
           >
             <Home className={cn(
               "w-4 h-4 transition-colors",
@@ -147,7 +148,7 @@ const Header = () => {
           <button
             onClick={() => handleNavigation("/history")}
             className={cn(
-              "w-10 h-10 rounded-xl glass-card flex items-center justify-center transition-all group",
+              "w-10 h-10 rounded-xl glass-card flex items-center justify-center transition-all group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
               currentPath === "/history" 
                 ? "bg-black shadow-2xl text-white" 
                 : "hover:bg-secondary/80"
@@ -155,7 +156,8 @@ const Header = () => {
             style={currentPath === "/history" ? { 
               boxShadow: `0 0 20px hsl(${preset.primary}), 0 0 40px hsl(${preset.primary} / 0.5), 0 0 60px hsl(${preset.primary} / 0.3)` 
             } : {}}
-            title="Receipt History"
+            aria-label="Receipt History"
+            aria-current={currentPath === "/history" ? "page" : undefined}
           >
             <Clock className={cn(
               "w-4 h-4 transition-colors",
@@ -170,7 +172,7 @@ const Header = () => {
           <button
             onClick={() => handleNavigation("/items")}
             className={cn(
-              "w-10 h-10 rounded-xl glass-card flex items-center justify-center transition-all group",
+              "w-10 h-10 rounded-xl glass-card flex items-center justify-center transition-all group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
               currentPath === "/items" 
                 ? "bg-black shadow-2xl text-white" 
                 : "hover:bg-secondary/80"
@@ -178,7 +180,8 @@ const Header = () => {
             style={currentPath === "/items" ? { 
               boxShadow: `0 0 20px hsl(${preset.primary}), 0 0 40px hsl(${preset.primary} / 0.5), 0 0 60px hsl(${preset.primary} / 0.3)` 
             } : {}}
-            title="Items Management"
+            aria-label="Items Management"
+            aria-current={currentPath === "/items" ? "page" : undefined}
           >
             <Package className={cn(
               "w-4 h-4 transition-colors",
@@ -193,7 +196,7 @@ const Header = () => {
           <button
             onClick={() => handleNavigation("/data")}
             className={cn(
-              "w-10 h-10 rounded-xl glass-card flex items-center justify-center transition-all group",
+              "w-10 h-10 rounded-xl glass-card flex items-center justify-center transition-all group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
               currentPath === "/data" 
                 ? "bg-black shadow-2xl text-white" 
                 : "hover:bg-secondary/80"
@@ -201,7 +204,8 @@ const Header = () => {
             style={currentPath === "/data" ? { 
               boxShadow: `0 0 20px hsl(${preset.primary}), 0 0 40px hsl(${preset.primary} / 0.5), 0 0 60px hsl(${preset.primary} / 0.3)` 
             } : {}}
-            title="Data Management"
+            aria-label="Data Management"
+            aria-current={currentPath === "/data" ? "page" : undefined}
           >
             <Database className={cn(
               "w-4 h-4 transition-colors",
@@ -247,7 +251,10 @@ const Header = () => {
           <div className="relative" ref={presetRef}>
             <button
               onClick={() => setShowPresets(!showPresets)}
-              className="h-8 w-8 rounded-xl glass-card flex items-center justify-center hover:bg-secondary/80 transition-all text-xs text-muted-foreground md:h-9 md:px-3 md:w-auto"
+              className="h-8 w-8 rounded-xl glass-card flex items-center justify-center hover:bg-secondary/80 transition-all text-xs text-muted-foreground md:h-9 md:px-3 md:w-auto focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Color theme selector"
+              aria-expanded={showPresets}
+              aria-haspopup="menu"
             >
               <Palette className="w-3.5 h-3.5 md:w-3.5 md:h-3.5" />
               <span className="hidden md:inline-block md:ml-2 md:w-3 md:h-3 rounded-full" style={{ background: `hsl(${preset.primary})` }} />
@@ -276,8 +283,9 @@ const Header = () => {
           {/* Theme Toggle */}
           <button
             onClick={toggleMode}
-            className="w-8 h-8 rounded-xl glass-card flex items-center justify-center hover:bg-secondary/80 transition-all group md:w-9 md:h-9"
-            title={mode === "light" ? "Dark mode" : "Light mode"}
+            className="w-8 h-8 rounded-xl glass-card flex items-center justify-center hover:bg-secondary/80 transition-all group md:w-9 md:h-9 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            aria-label={mode === "light" ? "Switch to dark mode" : "Switch to light mode"}
+            aria-pressed={mode === "dark"}
           >
             {mode === "light" ? (
               <Moon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors md:w-4 md:h-4" />
@@ -289,72 +297,83 @@ const Header = () => {
       </header>
 
       {/* Patient info below navbar - Mobile optimized */}
-      <div className="h-10 glass-panel border-b border-border/30 flex items-center px-4 gap-4 shrink-0 bg-background/50 backdrop-blur-sm md:h-12 md:px-6 md:gap-6">
+      <div className="h-12 glass-panel border-b border-border/30 flex items-center px-4 gap-3 shrink-0 bg-background/50 backdrop-blur-sm md:h-12 md:px-6 md:gap-6 sm:h-11">
         <div className="flex items-center gap-2 flex-1 max-w-xs">
-          <label className="text-[10px] text-muted-foreground whitespace-nowrap font-medium md:text-xs">Patient</label>
+          <label htmlFor="patient-name" className="text-[10px] text-muted-foreground whitespace-nowrap font-medium md:text-xs">Patient</label>
           <div className="flex-1">
             <input
+              id="patient-name"
               type="text"
               value={patientName}
               onChange={(e) => handlePatientNameChange(e.target.value)}
               onBlur={handlePatientNameBlur}
-              placeholder="Patient name..."
+              placeholder="Enter patient name..."
               disabled={isValidatingPatient}
+              aria-invalid={!!patientNameError}
+              aria-describedby={patientNameError ? "patient-error" : undefined}
               className={cn(
-                "h-7 px-2 rounded-lg glass-card text-xs w-full outline-none focus:ring-2 transition-all text-foreground placeholder:text-muted-foreground md:h-8 md:px-3 md:text-sm",
-                patientNameError ? "ring-2 ring-destructive/30 border-destructive/50" : "focus:ring-primary/30",
+                "h-9 px-3 rounded-lg glass-card text-sm w-full outline-none transition-all text-foreground placeholder:text-muted-foreground md:h-9 md:px-3 md:text-sm focus-visible:ring-2 focus-visible:ring-primary/30",
+                patientNameError ? "ring-2 ring-destructive/30 border-destructive/50" : "",
                 isValidatingPatient && "opacity-70 cursor-wait"
               )}
             />
             {patientNameError && (
-              <p className="text-xs text-destructive mt-1">{patientNameError}</p>
+              <p id="patient-error" className="text-xs text-destructive mt-1">{patientNameError}</p>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-[10px] text-muted-foreground whitespace-nowrap font-medium md:text-xs">Receipt #</label>
+          <label htmlFor="receipt-number" className="text-[10px] text-muted-foreground whitespace-nowrap font-medium md:text-xs">Receipt #</label>
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-0.5">
               {editingReceipt ? (
                 <input
+                  id="receipt-number"
                   type="number"
                   value={receiptInput}
                   onChange={e => handleReceiptChange(e.target.value)}
                   onBlur={handleReceiptBlur}
                   onKeyDown={e => e.key === "Enter" && handleReceiptBlur()}
                   autoFocus
+                  aria-invalid={!!receiptError}
+                  aria-describedby={receiptError ? "receipt-error" : undefined}
                   className={cn(
-                    "h-7 w-20 px-2 rounded-lg glass-card text-xs font-mono text-foreground outline-none transition-all md:h-8 md:w-28 md:px-3 md:text-sm",
-                    receiptError ? "ring-2 ring-destructive/30" : "focus:ring-primary/30"
+                    "h-9 w-24 px-3 rounded-lg glass-card text-sm font-mono text-foreground outline-none transition-all md:h-9 md:w-32 md:px-3 md:text-sm focus-visible:ring-2 focus-visible:ring-primary/30",
+                    receiptError ? "ring-2 ring-destructive/30" : ""
                   )}
                 />
               ) : (
                 <button
                   onClick={() => setEditingReceipt(true)}
-                  className="h-7 px-2 rounded-lg glass-card text-xs flex items-center font-mono text-foreground hover:bg-secondary/50 transition-all cursor-text md:h-8 md:px-3 md:text-sm"
-                  title="Click to edit receipt number"
+                  className="h-9 px-3 rounded-lg glass-card text-sm flex items-center font-mono text-foreground hover:bg-secondary/50 transition-all cursor-text md:h-9 md:px-3 md:text-sm focus-visible:ring-2 focus-visible:ring-primary/30"
+                  aria-label={`Edit receipt number: ${receiptNumber}`}
+                  tabIndex={0}
                 >
                   {receiptNumber}
                 </button>
               )}
-              <div className="flex flex-col">
+              <div className="flex flex-col gap-0.5">
                 <button
                   onClick={() => setReceiptNumber(receiptNumber + 1)}
-                  className="w-4 h-3.5 rounded-t-md glass-card flex items-center justify-center hover:bg-secondary/80 transition-all md:w-5 md:h-4"
+                  className="w-7 h-7 rounded-t-md glass-card flex items-center justify-center hover:bg-secondary/80 transition-all md:w-8 md:h-8 focus-visible:ring-2 focus-visible:ring-primary/30"
+                  aria-label="Increase receipt number"
+                  aria-describedby="receipt-number"
                 >
-                  <ChevronUp className="w-2 h-2 text-muted-foreground md:w-2.5 md:h-2.5" />
+                  <ChevronUp className="w-4 h-4 text-muted-foreground md:w-4 md:h-4" />
                 </button>
                 <button
                   onClick={() => { if (receiptNumber > 1) setReceiptNumber(receiptNumber - 1); }}
-                  className="w-4 h-3.5 rounded-b-md glass-card flex items-center justify-center hover:bg-secondary/80 transition-all md:w-5 md:h-4"
+                  className="w-7 h-7 rounded-b-md glass-card flex items-center justify-center hover:bg-secondary/80 transition-all md:w-8 md:h-8 focus-visible:ring-2 focus-visible:ring-primary/30"
+                  aria-label="Decrease receipt number"
+                  aria-describedby="receipt-number"
                 >
-                  <ChevronDown className="w-2 h-2 text-muted-foreground md:w-2.5 md:h-2.5" />
+                  <ChevronDown className="w-4 h-4 text-muted-foreground md:w-4 md:h-4" />
                 </button>
               </div>
             </div>
             {receiptError && (
-              <p className="text-[10px] text-destructive">{receiptError}</p>
+              <p id="receipt-error" className="text-[10px] text-destructive">{receiptError}</p>
             )}
           </div>
         </div>

@@ -31,7 +31,7 @@ const BillingPanel = () => {
   return (
     <>
       {/* Mobile: Full width panel */}
-      <aside className="md:w-80 w-full glass-sidebar md:border-l border-border/50 flex flex-col shrink-0 md:relative fixed bottom-16 md:bottom-auto left-0 right-0 md:h-auto h-64 bg-background/95 backdrop-blur-lg md:bg-transparent">
+      <aside className="md:w-80 w-full glass-sidebar md:border-l border-border/50 flex flex-col shrink-0 md:relative fixed bottom-16 md:bottom-auto left-0 right-0 md:h-auto h-64 bg-background/95 backdrop-blur-lg md:bg-transparent" aria-label="Billing cart and summary">
         <div className="p-3 md:p-4 border-b border-border/50">
           <p className="text-sm font-medium text-foreground truncate">
             {patientName || "No patient"}
@@ -39,9 +39,12 @@ const BillingPanel = () => {
           <p className="text-xs text-muted-foreground font-mono">Receipt #{receiptNumber}</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2">
+        <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2" role="region" aria-label="Cart items">
           {cart.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center mt-6 md:mt-10">No items added</p>
+            <div className="text-sm text-muted-foreground text-center mt-6 md:mt-10">
+              <p>No items in cart</p>
+              <p className="text-xs mt-2">Add items from the product list to get started</p>
+            </div>
           ) : (
             cart.map((item, idx) => {
               const price = getPrice(item.product);
@@ -63,33 +66,42 @@ const BillingPanel = () => {
                         GH₵{price.toFixed(2)} × {item.quantity} = <span className="font-semibold text-foreground">GH₵{(price * item.quantity).toFixed(2)}</span>
                       </p>
                       {isExpired && (
-                        <span className="text-[10px] text-destructive font-semibold">Expired drug cannot be dispensed.</span>
+                        <span className="text-[10px] text-destructive font-semibold flex items-center gap-1">
+                          <span className="text-xs" role="img" aria-label="warning">⚠️</span>
+                          Expired - cannot dispense
+                        </span>
                       )}
                       {!isExpired && isLowStock && (
-                        <span className="text-[10px] text-amber-900 font-semibold">Low stock item — verify before checkout.</span>
+                        <span className="text-[10px] text-amber-900 font-semibold flex items-center gap-1">
+                          <span className="text-xs" role="img" aria-label="info">ℹ️</span>
+                          Low stock - verify quantity
+                        </span>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                      className="w-6 h-6 rounded-lg glass-card flex items-center justify-center hover:bg-secondary transition-all"
+                      className="w-7 h-7 rounded-lg glass-card flex items-center justify-center hover:bg-secondary transition-all focus-visible:ring-2 focus-visible:ring-primary/30"
+                      aria-label={`Decrease quantity for ${item.product.name}`}
                     >
                       <Minus className="w-3 h-3" />
                     </button>
-                    <span className="text-xs font-semibold w-5 text-center">{item.quantity}</span>
+                    <span className="text-xs font-semibold w-6 text-center" aria-live="polite">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                      className="w-6 h-6 rounded-lg glass-card flex items-center justify-center hover:bg-secondary transition-all"
+                      className="w-7 h-7 rounded-lg glass-card flex items-center justify-center hover:bg-secondary transition-all focus-visible:ring-2 focus-visible:ring-primary/30"
+                      aria-label={`Increase quantity for ${item.product.name}`}
                     >
                       <Plus className="w-3 h-3" />
                     </button>
                   </div>
                   <button
                     onClick={() => removeFromCart(item.product.id)}
-                    className="w-6 h-6 rounded-lg flex items-center justify-center text-destructive hover:bg-destructive/10 transition-all"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-destructive hover:bg-destructive/10 transition-all focus-visible:ring-2 focus-visible:ring-destructive/30"
+                    aria-label={`Remove ${item.product.name} from cart`}
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               );
@@ -112,8 +124,9 @@ const BillingPanel = () => {
           </div>
 
           {hasExpiredOrOverstocked && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
-              Remove expired drug items or adjust quantities that exceed current stock before generating a receipt.
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive" role="alert">
+              <span className="font-semibold">⚠️ Cannot generate receipt</span>
+              <p className="mt-1">Remove expired items or adjust quantities exceeding stock.</p>
             </div>
           )}
           <Button
@@ -129,14 +142,17 @@ const BillingPanel = () => {
               }, 800);
             }}
             disabled={cart.length === 0 || isGeneratingReceipt || hasExpiredOrOverstocked}
+            aria-busy={isGeneratingReceipt}
+            aria-describedby={hasExpiredOrOverstocked ? "receipt-warning" : undefined}
           >
-            {isGeneratingReceipt ? "Generating..." : "Generate Receipt"}
+            {isGeneratingReceipt ? "Generating receipt..." : "Generate Receipt"}
           </Button>
           <AlertDialog open={showConfirmClear} onOpenChange={setShowConfirmClear}>
             <AlertDialogTrigger asChild>
               <button
                 disabled={cart.length === 0}
-                className="w-full text-xs md:text-sm text-destructive hover:text-destructive/80 disabled:opacity-40 transition-colors py-1"
+                className="w-full text-xs md:text-sm text-destructive hover:text-destructive/80 disabled:opacity-40 transition-colors py-1 focus-visible:ring-2 focus-visible:ring-destructive/30"
+                aria-label="Clear current bill and remove all items"
               >
                 Clear Bill
               </button>

@@ -178,6 +178,10 @@
 }
 
 @layer utilities {
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden border-0 whitespace-nowrap;
+  }
+  
   .animate-slide-up {
     animation: slideUp 0.3s ease-out both;
   }
@@ -208,4 +212,89 @@
 }
 .dark ::-webkit-scrollbar-thumb {
   background: hsl(220 15% 25%);
+}
+
+/* Enhanced Accessibility & UX Improvements */
+@layer components {
+  /* Better focus-visible styling for keyboard navigation */
+  @supports selector(:focus-visible) {
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible,
+    [role="button"]:focus-visible {
+      @apply outline-none ring-2 ring-primary/30 ring-offset-2 rounded;
+    }
+  }
+
+  /* Improved form field styles with better visibility */
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="password"],
+  textarea,
+  select {
+    @apply transition-all duration-200;
+  }
+
+  /* Error state styling - enhanced visibility */
+  input[aria-invalid="true"],
+  textarea[aria-invalid="true"],
+  select[aria-invalid="true"] {
+    @apply ring-1 ring-destructive/50 border-destructive/50 focus-visible:ring-2 focus-visible:ring-destructive/50;
+  }
+
+  /* Loading state - clearer indication */
+  button[aria-busy="true"],
+  [aria-busy="true"] {
+    @apply opacity-70 pointer-events-none;
+  }
+
+  /* Alert and warning regions - prominent */
+  [role="alert"],
+  [role="status"] {
+    @apply animate-scale-in;
+  }
+
+  /* Better disabled button states */
+  button:disabled,
+  button[disabled],
+  .disabled {
+    @apply opacity-50 cursor-not-allowed pointer-events-none;
+  }
+
+  /* Better placeholder text */
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-muted-foreground/70 opacity-100;
+  }
+
+  /* Improved button hover states */
+  button:not(:disabled):hover {
+    @apply transition-colors duration-200;
+  }
+
+  /* Improved touch targets */
+  .touch-target {
+    @apply min-h-11 min-w-11;
+  }
+
+  /* Better label styling for form accessibility */
+  label {
+    @apply cursor-pointer;
+  }
+
+  /* Text selection styling */
+  ::selection {
+    @apply bg-primary/25 text-foreground;
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      @apply !animate-none !transition-none;
+    }
+  }
 }
