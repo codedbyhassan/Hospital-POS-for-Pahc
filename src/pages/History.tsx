@@ -9,11 +9,14 @@ import { cn } from "@/lib/utils";
 import { format, isToday, isThisMonth, isThisYear, isSameDay, startOfDay, endOfDay, parseISO, parse } from "date-fns";
 import Header from "@/components/Header";
 
-const parseReceiptDate = (dateStr: string): Date => {
-  // Handle undefined/null dates gracefully
-  if (!dateStr) return new Date();
-  // Format: "6 Mar 2026" etc - use date-fns parse with explicit format
-  return parse(dateStr, 'd MMM yyyy', new Date());
+const parseReceiptDate = (dateStr: string, timestamp?: string): Date => {
+  if (timestamp) {
+    const parsed = parseISO(timestamp);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  if (!dateStr) return new Date(0);
+  const parsed = parse(dateStr.replace("Sept", "Sep"), 'd MMM yyyy', new Date());
+  return Number.isNaN(parsed.getTime()) ? new Date(0) : parsed;
 };
 
 const History = () => {
@@ -159,7 +162,7 @@ const History = () => {
   const filteredReceipts = useMemo(() => {
     if (filterMode === "all" && !selectedDate) return receiptHistory;
     return receiptHistory.filter(r => {
-      const d = parseReceiptDate(r.date);
+      const d = parseReceiptDate(r.date, r.timestamp);
       if (selectedDate && filterMode === "day") return isSameDay(d, selectedDate);
       if (filterMode === "day") return isToday(d);
       if (filterMode === "month") return isThisMonth(d);
@@ -182,17 +185,17 @@ const History = () => {
   }, [filteredReceipts, currentPage]);
 
   const todayTotal = useMemo(() =>
-    receiptHistory.filter(r => isToday(parseReceiptDate(r.date))).reduce((s, r) => s + r.grandTotal, 0),
+    receiptHistory.filter(r => isToday(parseReceiptDate(r.date, r.timestamp))).reduce((s, r) => s + r.grandTotal, 0),
     [receiptHistory]
   );
 
   const monthTotal = useMemo(() =>
-    receiptHistory.filter(r => isThisMonth(parseReceiptDate(r.date))).reduce((s, r) => s + r.grandTotal, 0),
+    receiptHistory.filter(r => isThisMonth(parseReceiptDate(r.date, r.timestamp))).reduce((s, r) => s + r.grandTotal, 0),
     [receiptHistory]
   );
 
   const yearTotal = useMemo(() =>
-    receiptHistory.filter(r => isThisYear(parseReceiptDate(r.date))).reduce((s, r) => s + r.grandTotal, 0),
+    receiptHistory.filter(r => isThisYear(parseReceiptDate(r.date, r.timestamp))).reduce((s, r) => s + r.grandTotal, 0),
     [receiptHistory]
   );
 
@@ -279,7 +282,7 @@ const History = () => {
             <CardContent className="px-4 pb-4">
               <p className="text-2xl font-bold text-foreground">GH₵{todayTotal.toFixed(2)}</p>
               <p className="text-[11px] text-muted-foreground mt-1">
-                {receiptHistory.filter(r => isToday(parseReceiptDate(r.date))).length} transactions
+                {receiptHistory.filter(r => isToday(parseReceiptDate(r.date, r.timestamp))).length} transactions
               </p>
             </CardContent>
           </Card>
@@ -293,7 +296,7 @@ const History = () => {
             <CardContent className="px-4 pb-4">
               <p className="text-2xl font-bold text-foreground">GH₵{monthTotal.toFixed(2)}</p>
               <p className="text-[11px] text-muted-foreground mt-1">
-                {receiptHistory.filter(r => isThisMonth(parseReceiptDate(r.date))).length} transactions
+                {receiptHistory.filter(r => isThisMonth(parseReceiptDate(r.date, r.timestamp))).length} transactions
               </p>
             </CardContent>
           </Card>
@@ -307,7 +310,7 @@ const History = () => {
             <CardContent className="px-4 pb-4">
               <p className="text-2xl font-bold text-foreground">GH₵{yearTotal.toFixed(2)}</p>
               <p className="text-[11px] text-muted-foreground mt-1">
-                {receiptHistory.filter(r => isThisYear(parseReceiptDate(r.date))).length} transactions
+                {receiptHistory.filter(r => isThisYear(parseReceiptDate(r.date, r.timestamp))).length} transactions
               </p>
             </CardContent>
           </Card>

@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import * as XLSX from "xlsx";
 
 interface Props {
   onClose: () => void;
@@ -219,7 +218,8 @@ const ReceiptModal = ({ onClose }: Props) => {
     doc.save(`PAHC_Receipt_${receiptNumber}.pdf`);
   };
 
-  const exportExcel = () => {
+  const exportExcel = async () => {
+    const XLSX = await import("xlsx");
     // Header info rows
     const headerRows = [
       ["Patricia Appiagyei Health Centre"],
@@ -282,7 +282,7 @@ const ReceiptModal = ({ onClose }: Props) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-foreground/30 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
-      <div className="glass-panel border border-border/50 w-full max-w-lg max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
+      <div id="receipt-print" className="glass-panel border border-border/50 w-full max-w-lg max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-border/50">
           <div className="flex items-start justify-between">
             <div>
