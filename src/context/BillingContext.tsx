@@ -53,7 +53,10 @@ export const useBilling = () => {
   return ctx;
 };
 
-export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const BillingProviderContent: React.FC<{
+  children: React.ReactNode;
+  updateProduct: (id: string, product: Omit<Product, "id">) => void;
+}> = ({ children, updateProduct }) => {
   const [patientName, setPatientName] = useState("");
   const [receiptNumber, setReceiptNumber] = useState(() => {
     try {
@@ -83,8 +86,6 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Storage failures should not prevent the till from remaining usable.
     }
   }, [receiptNumber, receiptHistory]);
-
-  const { updateProduct } = useProducts();
 
   const getPrice = useCallback((product: Product) => {
     return isNHIS ? product.nhisPrice : product.cashPrice;
@@ -191,3 +192,12 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     </BillingContext.Provider>
   );
 };
+
+const ProductProviderBridge: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { updateProduct } = useProducts();
+  return <BillingProviderContent updateProduct={updateProduct}>{children}</BillingProviderContent>;
+};
+
+export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <ProductProviderBridge>{children}</ProductProviderBridge>
+);
