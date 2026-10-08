@@ -1,375 +1,76 @@
 import { useBilling } from "@/context/BillingContext";
 import { useTheme, colorPresets } from "@/context/ThemeContext";
-import { useLoading } from "@/context/LoadingContext";
 import { Badge } from "@/components/ui/badge";
-import { Moon, Sun, Clock, Palette, ChevronDown, ChevronUp, Check, Package, Database, Home } from "lucide-react";
+import { Moon, Sun, Palette, Check, Search, ChevronUp, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useNavigate, useLocation } from "react-router-dom";
-import Logo from "@/components/Logo";
 import { validatePatientName, validateReceiptNumber } from "@/lib/validation";
 
 const Header = () => {
   const { patientName, setPatientName, receiptNumber, setReceiptNumber, isNHIS, setIsNHIS, receiptHistory } = useBilling();
   const { mode, toggleMode, preset, setPreset } = useTheme();
-  const { showLoader, hideLoader } = useLoading();
   const [showPresets, setShowPresets] = useState(false);
   const [editingReceipt, setEditingReceipt] = useState(false);
   const [receiptInput, setReceiptInput] = useState(String(receiptNumber));
-  const [receiptError, setReceiptError] = useState<string | null>(null);
   const [patientNameError, setPatientNameError] = useState<string | null>(null);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
   const presetRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
 
-  const currentPath = location.pathname;
-
+  useEffect(() => setReceiptInput(String(receiptNumber)), [receiptNumber]);
   useEffect(() => {
-    setReceiptInput(String(receiptNumber));
-  }, [receiptNumber]);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (presetRef.current && !presetRef.current.contains(e.target as Node)) setShowPresets(false);
+    const close = (event: MouseEvent) => {
+      if (presetRef.current && !presetRef.current.contains(event.target as Node)) setShowPresets(false);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  const handleNavigation = (path: string) => {
-    if (currentPath !== path) {
-      showLoader();
-      // Small delay to show loading animation
-      setTimeout(() => {
-        navigate(path);
-        setTimeout(() => hideLoader(), 300); // Hide after navigation
-      }, 200);
-    }
-  };
-
-  const handlePatientNameChange = (value: string) => {
+  const isDuplicate = (value: number) => receiptHistory.some((receipt) => receipt.receiptNumber === value);
+  const handlePatient = (value: string) => {
     setPatientName(value);
-    const validation = value.trim() ? validatePatientName(value) : { isValid: true };
-    setPatientNameError(validation.isValid ? null : validation.error || null);
+    const result = value.trim() ? validatePatientName(value) : { isValid: true };
+    setPatientNameError(result.isValid ? null : result.error || null);
   };
-
-  const handlePatientNameBlur = () => {
-    if (patientName.trim()) {
-      const validation = validatePatientName(patientName);
-      setPatientNameError(validation.isValid ? null : validation.error || null);
-    }
-  };
-
-  const isDuplicateReceipt = (num: number) => receiptHistory.some(r => r.receiptNumber === num);
-
-  const handleReceiptChange = (val: string) => {
-    setReceiptInput(val);
-    const num = parseInt(val, 10);
-    if (!isNaN(num) && num > 0) {
-      const validation = validateReceiptNumber(num);
-      if (validation.isValid) {
-        if (num !== receiptNumber && isDuplicateReceipt(num)) {
-          setReceiptError("This receipt number already exists in history.");
-        } else {
-          setReceiptError(null);
-          setReceiptNumber(num);
-        }
-      } else {
-        setReceiptError(validation.error || null);
-      }
-    } else {
+  const handleReceipt = (value: string) => {
+    setReceiptInput(value);
+    const number = Number.parseInt(value, 10);
+    const result = validateReceiptNumber(number);
+    if (result.isValid && !isDuplicate(number)) {
+      setReceiptNumber(number);
       setReceiptError(null);
-    }
+    } else if (value) setReceiptError(result.error || "Receipt number already exists.");
   };
-
-  const handleReceiptBlur = () => {
+  const finishReceipt = () => {
     setEditingReceipt(false);
-    const num = parseInt(receiptInput, 10);
-    if (isNaN(num) || num <= 0) {
+    const number = Number.parseInt(receiptInput, 10);
+    if (!Number.isFinite(number) || number <= 0 || isDuplicate(number)) {
       setReceiptInput(String(receiptNumber));
       setReceiptError(null);
-    } else {
-      const validation = validateReceiptNumber(num);
-      if (!validation.isValid || (num !== receiptNumber && isDuplicateReceipt(num))) {
-        setReceiptInput(String(receiptNumber));
-        setReceiptError(null);
-      }
     }
   };
 
   return (
-    <>
-      <header className="h-16 glass-panel border-b border-border/50 flex items-center px-4 gap-3 shrink-0 z-20 md:px-6 md:gap-5">
-        <div className="flex items-center gap-2 mr-2 md:gap-3 md:mr-3">
-          <Logo size={32} className="animate-float md:size-36" />
-          <div className="flex flex-col md:flex-col">
-            <span className="font-bold text-foreground text-xs tracking-tight leading-tight md:text-sm">PAHC</span>
-            <span className="text-[10px] text-muted-foreground leading-tight md:text-xs">Health Center</span>
-          </div>
+    <header className="shrink-0 border-b border-border/70 bg-card/90 backdrop-blur-xl">
+      <div className="flex h-14 items-center gap-3 px-4 md:h-[68px] md:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-black text-primary-foreground shadow-lg shadow-primary/25">P</div>
+          <div className="min-w-0"><p className="truncate text-sm font-bold tracking-tight">PAHC POS</p><p className="hidden text-[10px] text-muted-foreground sm:block">Health center billing</p></div>
         </div>
-
-        {/* Desktop Navigation - Hidden on mobile */}
-        <div className="hidden md:flex items-center justify-center gap-1 flex-1">
-          <button
-            onClick={() => handleNavigation("/")}
-            className={cn(
-              "w-10 h-10 rounded-xl glass-card flex items-center justify-center transition-all group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-              currentPath === "/" 
-                ? "bg-black shadow-2xl text-white" 
-                : "hover:bg-secondary/80"
-            )}
-            style={currentPath === "/" ? { 
-              boxShadow: `0 0 20px hsl(${preset.primary}), 0 0 40px hsl(${preset.primary} / 0.5), 0 0 60px hsl(${preset.primary} / 0.3)` 
-            } : {}}
-            aria-label="Home"
-            aria-current={currentPath === "/" ? "page" : undefined}
-          >
-            <Home className={cn(
-              "w-4 h-4 transition-colors",
-              currentPath === "/" 
-                ? "text-white" 
-                : "text-muted-foreground group-hover:text-foreground"
-            )}
-            style={currentPath === "/" ? { color: `hsl(${preset.primary})` } : {}}
-            />
-          </button>
-
-          <button
-            onClick={() => handleNavigation("/history")}
-            className={cn(
-              "w-10 h-10 rounded-xl glass-card flex items-center justify-center transition-all group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-              currentPath === "/history" 
-                ? "bg-black shadow-2xl text-white" 
-                : "hover:bg-secondary/80"
-            )}
-            style={currentPath === "/history" ? { 
-              boxShadow: `0 0 20px hsl(${preset.primary}), 0 0 40px hsl(${preset.primary} / 0.5), 0 0 60px hsl(${preset.primary} / 0.3)` 
-            } : {}}
-            aria-label="Receipt History"
-            aria-current={currentPath === "/history" ? "page" : undefined}
-          >
-            <Clock className={cn(
-              "w-4 h-4 transition-colors",
-              currentPath === "/history" 
-                ? "text-white" 
-                : "text-muted-foreground group-hover:text-foreground"
-            )}
-            style={currentPath === "/history" ? { color: `hsl(${preset.primary})` } : {}}
-            />
-          </button>
-
-          <button
-            onClick={() => handleNavigation("/items")}
-            className={cn(
-              "w-10 h-10 rounded-xl glass-card flex items-center justify-center transition-all group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-              currentPath === "/items" 
-                ? "bg-black shadow-2xl text-white" 
-                : "hover:bg-secondary/80"
-            )}
-            style={currentPath === "/items" ? { 
-              boxShadow: `0 0 20px hsl(${preset.primary}), 0 0 40px hsl(${preset.primary} / 0.5), 0 0 60px hsl(${preset.primary} / 0.3)` 
-            } : {}}
-            aria-label="Items Management"
-            aria-current={currentPath === "/items" ? "page" : undefined}
-          >
-            <Package className={cn(
-              "w-4 h-4 transition-colors",
-              currentPath === "/items" 
-                ? "text-white" 
-                : "text-muted-foreground group-hover:text-foreground"
-            )}
-            style={currentPath === "/items" ? { color: `hsl(${preset.primary})` } : {}}
-            />
-          </button>
-
-          <button
-            onClick={() => handleNavigation("/data")}
-            className={cn(
-              "w-10 h-10 rounded-xl glass-card flex items-center justify-center transition-all group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-              currentPath === "/data" 
-                ? "bg-black shadow-2xl text-white" 
-                : "hover:bg-secondary/80"
-            )}
-            style={currentPath === "/data" ? { 
-              boxShadow: `0 0 20px hsl(${preset.primary}), 0 0 40px hsl(${preset.primary} / 0.5), 0 0 60px hsl(${preset.primary} / 0.3)` 
-            } : {}}
-            aria-label="Data Management"
-            aria-current={currentPath === "/data" ? "page" : undefined}
-          >
-            <Database className={cn(
-              "w-4 h-4 transition-colors",
-              currentPath === "/data" 
-                ? "text-white" 
-                : "text-muted-foreground group-hover:text-foreground"
-            )}
-            style={currentPath === "/data" ? { color: `hsl(${preset.primary})` } : {}}
-            />
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2 ml-auto md:gap-3">
-          {/* NHIS Toggle */}
-          <div className="flex items-center gap-2.5">
-            <span className="text-xs text-muted-foreground font-medium">NHIS</span>
-            <button
-              onClick={() => setIsNHIS(!isNHIS)}
-            role="switch"
-            aria-checked={isNHIS}
-            aria-label="Use NHIS pricing"
-            className={cn(
-              "relative w-12 h-6 rounded-full transition-all duration-300 ease-in-out shadow-inner md:w-14 md:h-7",
-                isNHIS
-                  ? "bg-success shadow-success/30"
-                  : "bg-muted"
-              )}
-            >
-              <span className={cn(
-                "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300 ease-in-out md:top-0.5 md:w-6 md:h-6",
-                isNHIS ? "left-[22px] md:left-[30px]" : "left-0.5"
-              )} />
-              <span className={cn(
-                "absolute inset-0 flex items-center text-[8px] font-bold transition-opacity duration-200 md:text-[9px]",
-                isNHIS ? "justify-start pl-1 text-success-foreground opacity-100" : "opacity-0"
-              )}>ON</span>
-            </button>
-            {isNHIS && (
-              <Badge className="bg-success/15 text-success border border-success/25 text-[10px] font-semibold animate-scale-in">
-                NHIS Active
-              </Badge>
-            )}
-          </div>
-
-          {/* Color Presets */}
-          <div className="relative" ref={presetRef}>
-            <button
-              onClick={() => setShowPresets(!showPresets)}
-              className="h-8 w-8 rounded-xl glass-card flex items-center justify-center hover:bg-secondary/80 transition-all text-xs text-muted-foreground md:h-9 md:px-3 md:w-auto focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              aria-label="Color theme selector"
-              aria-expanded={showPresets}
-              aria-haspopup="menu"
-            >
-              <Palette className="w-3.5 h-3.5 md:w-3.5 md:h-3.5" />
-              <span className="hidden md:inline-block md:ml-2 md:w-3 md:h-3 rounded-full" style={{ background: `hsl(${preset.primary})` }} />
-              <ChevronDown className={cn("hidden md:inline-block md:w-3 md:h-3 md:ml-1 transition-transform", showPresets && "rotate-180")} />
-            </button>
-            {showPresets && (
-              <div className="absolute right-0 top-10 w-48 glass-panel rounded-xl border border-border/50 shadow-xl p-2 z-50 animate-scale-in md:top-11">
-                {colorPresets.map(p => (
-                  <button
-                    key={p.name}
-                    onClick={() => { setPreset(p); setShowPresets(false); }}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-colors",
-                      preset.name === p.name ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary/60"
-                    )}
-                  >
-                    <span className="w-4 h-4 rounded-full shadow-sm border border-border/30" style={{ background: `hsl(${p.primary})` }} />
-                    <span className="flex-1 text-left font-medium">{p.label}</span>
-                    {preset.name === p.name && <Check className="w-3.5 h-3.5" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleMode}
-            className="w-8 h-8 rounded-xl glass-card flex items-center justify-center hover:bg-secondary/80 transition-all group md:w-9 md:h-9 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            aria-label={mode === "light" ? "Switch to dark mode" : "Switch to light mode"}
-            aria-pressed={mode === "dark"}
-          >
-            {mode === "light" ? (
-              <Moon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors md:w-4 md:h-4" />
-            ) : (
-              <Sun className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors md:w-4 md:h-4" />
-            )}
-          </button>
-        </div>
-      </header>
-
-      {/* Patient info below navbar - Mobile optimized */}
-      <div className="h-12 glass-panel border-b border-border/30 flex items-center px-4 gap-3 shrink-0 bg-background/50 backdrop-blur-sm md:h-12 md:px-6 md:gap-6 sm:h-11">
-        <div className="flex items-center gap-2 flex-1 max-w-xs">
-          <label htmlFor="patient-name" className="text-[10px] text-muted-foreground whitespace-nowrap font-medium md:text-xs">Patient</label>
-          <div className="flex-1">
-            <input
-              id="patient-name"
-              type="text"
-              value={patientName}
-              onChange={(e) => handlePatientNameChange(e.target.value)}
-              onBlur={handlePatientNameBlur}
-              placeholder="Enter patient name..."
-              aria-invalid={!!patientNameError}
-              aria-describedby={patientNameError ? "patient-error" : undefined}
-              className={cn(
-                "h-9 px-3 rounded-lg glass-card text-sm w-full outline-none transition-all text-foreground placeholder:text-muted-foreground md:h-9 md:px-3 md:text-sm focus-visible:ring-2 focus-visible:ring-primary/30",
-                patientNameError ? "ring-2 ring-destructive/30 border-destructive/50" : ""
-              )}
-            />
-            {patientNameError && (
-              <p id="patient-error" className="text-xs text-destructive mt-1">{patientNameError}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label htmlFor="receipt-number" className="text-[10px] text-muted-foreground whitespace-nowrap font-medium md:text-xs">Receipt #</label>
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-0.5">
-              {editingReceipt ? (
-                <input
-                  id="receipt-number"
-                  type="number"
-                  value={receiptInput}
-                  onChange={e => handleReceiptChange(e.target.value)}
-                  onBlur={handleReceiptBlur}
-                  onKeyDown={e => e.key === "Enter" && handleReceiptBlur()}
-                  autoFocus
-                  aria-invalid={!!receiptError}
-                  aria-describedby={receiptError ? "receipt-error" : undefined}
-                  className={cn(
-                    "h-9 w-24 px-3 rounded-lg glass-card text-sm font-mono text-foreground outline-none transition-all md:h-9 md:w-32 md:px-3 md:text-sm focus-visible:ring-2 focus-visible:ring-primary/30",
-                    receiptError ? "ring-2 ring-destructive/30" : ""
-                  )}
-                />
-              ) : (
-                <button
-                  onClick={() => setEditingReceipt(true)}
-                  className="h-9 px-3 rounded-lg glass-card text-sm flex items-center font-mono text-foreground hover:bg-secondary/50 transition-all cursor-text md:h-9 md:px-3 md:text-sm focus-visible:ring-2 focus-visible:ring-primary/30"
-                  aria-label={`Edit receipt number: ${receiptNumber}`}
-                  tabIndex={0}
-                >
-                  {receiptNumber}
-                </button>
-              )}
-              <div className="flex flex-col gap-0.5">
-                <button
-                  onClick={() => setReceiptNumber(receiptNumber + 1)}
-                  className="w-7 h-7 rounded-t-md glass-card flex items-center justify-center hover:bg-secondary/80 transition-all md:w-8 md:h-8 focus-visible:ring-2 focus-visible:ring-primary/30"
-                  aria-label="Increase receipt number"
-                  aria-describedby="receipt-number"
-                >
-                  <ChevronUp className="w-4 h-4 text-muted-foreground md:w-4 md:h-4" />
-                </button>
-                <button
-                  onClick={() => { if (receiptNumber > 1) setReceiptNumber(receiptNumber - 1); }}
-                  className="w-7 h-7 rounded-b-md glass-card flex items-center justify-center hover:bg-secondary/80 transition-all md:w-8 md:h-8 focus-visible:ring-2 focus-visible:ring-primary/30"
-                  aria-label="Decrease receipt number"
-                  aria-describedby="receipt-number"
-                >
-                  <ChevronDown className="w-4 h-4 text-muted-foreground md:w-4 md:h-4" />
-                </button>
-              </div>
-            </div>
-            {receiptError && (
-              <p id="receipt-error" className="text-[10px] text-destructive">{receiptError}</p>
-            )}
-          </div>
+        <div className="ml-auto flex items-center gap-2" ref={presetRef}>
+          <div className="hidden items-center gap-2 sm:flex"><span className="text-xs text-muted-foreground">NHIS</span><button type="button" role="switch" aria-checked={isNHIS} aria-label="Use NHIS pricing" onClick={() => setIsNHIS(!isNHIS)} className={cn("relative h-6 w-11 rounded-full transition-colors", isNHIS ? "bg-success" : "bg-muted")}><span className={cn("absolute top-1 size-4 rounded-full bg-white shadow transition-transform", isNHIS ? "translate-x-6" : "translate-x-1")} /></button>{isNHIS && <Badge variant="secondary" className="text-[10px] text-success">Active</Badge>}</div>
+          <button type="button" aria-label="Choose theme color" aria-expanded={showPresets} onClick={() => setShowPresets(!showPresets)} className="flex size-9 items-center justify-center rounded-xl border border-border bg-background hover:bg-muted"><Palette className="size-4" /></button>
+          {showPresets && <div className="absolute right-14 top-12 z-50 flex w-48 flex-col gap-1 rounded-2xl border border-border bg-popover p-2 shadow-xl md:top-16">{colorPresets.map((item) => <button type="button" key={item.name} onClick={() => { setPreset(item); setShowPresets(false); }} className={cn("flex items-center gap-3 rounded-xl px-3 py-2 text-left text-xs", preset.name === item.name ? "bg-primary/10 text-primary" : "hover:bg-muted")}><span className="size-3 rounded-full" style={{ background: `hsl(${item.primary})` }} /><span className="flex-1">{item.label}</span>{preset.name === item.name && <Check className="size-3" />}</button>)}</div>}
+          <button type="button" aria-label={mode === "light" ? "Switch to dark mode" : "Switch to light mode"} onClick={toggleMode} className="flex size-9 items-center justify-center rounded-xl border border-border bg-background hover:bg-muted">{mode === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}</button>
         </div>
       </div>
-    </>
+      <div className="grid grid-cols-[1fr_auto] gap-3 border-t border-border/50 bg-muted/30 px-4 py-2.5 md:grid-cols-[minmax(240px,1fr)_auto] md:px-6">
+        <label className="flex min-w-0 items-center gap-2"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Patient</span><input id="patient-name" value={patientName} onChange={(event) => handlePatient(event.target.value)} placeholder="Enter patient name" aria-invalid={!!patientNameError} className="h-9 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm outline-none ring-primary/30 focus:ring-2" /></label>
+        <div className="flex items-center gap-1.5"><span className="hidden text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:block">Receipt</span>{editingReceipt ? <input autoFocus type="number" value={receiptInput} onChange={(event) => handleReceipt(event.target.value)} onBlur={finishReceipt} onKeyDown={(event) => event.key === "Enter" && finishReceipt()} className="h-9 w-20 rounded-lg border border-border bg-background px-2 font-mono text-sm outline-none focus:ring-2 focus:ring-primary/30" /> : <button type="button" onClick={() => setEditingReceipt(true)} aria-label={`Edit receipt number ${receiptNumber}`} className="h-9 rounded-lg border border-border bg-background px-3 font-mono text-sm">{receiptNumber}</button>}<div className="flex flex-col gap-0.5"><button type="button" aria-label="Increase receipt number" onClick={() => setReceiptNumber(receiptNumber + 1)} className="flex size-4 items-center justify-center rounded bg-background text-muted-foreground"><ChevronUp className="size-3" /></button><button type="button" aria-label="Decrease receipt number" onClick={() => receiptNumber > 1 && setReceiptNumber(receiptNumber - 1)} className="flex size-4 items-center justify-center rounded bg-background text-muted-foreground"><ChevronDown className="size-3" /></button></div></div>
+      </div>
+      <div className="flex items-center justify-between px-4 py-1.5 sm:hidden"><span className="text-[10px] text-muted-foreground">Pricing mode</span><button type="button" role="switch" aria-checked={isNHIS} onClick={() => setIsNHIS(!isNHIS)} className={cn("rounded-full px-3 py-1 text-[10px] font-bold", isNHIS ? "bg-success/15 text-success" : "bg-muted text-muted-foreground")}>{isNHIS ? "NHIS pricing" : "Standard pricing"}</button></div>
+      {(patientNameError || receiptError) && <p className="px-4 pb-2 text-xs text-destructive" role="alert">{patientNameError || receiptError}</p>}
+    </header>
   );
 };
-
 export default Header;
+                                                                            

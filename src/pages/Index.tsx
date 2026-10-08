@@ -3,18 +3,5 @@ import CategorySidebar from "@/components/CategorySidebar";
 import ProductGrid from "@/components/ProductGrid";
 import BillingPanel from "@/components/BillingPanel";
 
-const Index = () => {
-  return (
-      <div className="h-screen flex flex-col bg-background overflow-hidden">
-        <Header />
-        {/* Mobile: Stack layout, Desktop: Side-by-side layout */}
-        <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-          <CategorySidebar />
-          <ProductGrid />
-          <BillingPanel />
-        </div>
-      </div>
-  );
-};
-
+const Index = () => <div className="flex h-screen flex-col overflow-hidden bg-background"><Header /><div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row"><CategorySidebar /><ProductGrid /><BillingPanel /></div></div>;
 export default Index;
