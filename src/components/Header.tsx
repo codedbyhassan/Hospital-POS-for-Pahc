@@ -18,7 +18,6 @@ const Header = () => {
   const [receiptInput, setReceiptInput] = useState(String(receiptNumber));
   const [receiptError, setReceiptError] = useState<string | null>(null);
   const [patientNameError, setPatientNameError] = useState<string | null>(null);
-  const [isValidatingPatient, setIsValidatingPatient] = useState(false);
   const presetRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,20 +47,10 @@ const Header = () => {
     }
   };
 
-  const handlePatientNameChange = async (value: string) => {
+  const handlePatientNameChange = (value: string) => {
     setPatientName(value);
-    if (value.trim()) {
-      setIsValidatingPatient(true);
-      // Simulate async validation for better UX
-      setTimeout(() => {
-        const validation = validatePatientName(value);
-        setPatientNameError(validation.isValid ? null : validation.error || null);
-        setIsValidatingPatient(false);
-      }, 300);
-    } else {
-      setPatientNameError(null);
-      setIsValidatingPatient(false);
-    }
+    const validation = value.trim() ? validatePatientName(value) : { isValid: true };
+    setPatientNameError(validation.isValid ? null : validation.error || null);
   };
 
   const handlePatientNameBlur = () => {
@@ -220,12 +209,15 @@ const Header = () => {
 
         <div className="flex items-center gap-2 ml-auto md:gap-3">
           {/* NHIS Toggle */}
-          <div className="hidden sm:flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5">
             <span className="text-xs text-muted-foreground font-medium">NHIS</span>
             <button
               onClick={() => setIsNHIS(!isNHIS)}
-              className={cn(
-                "relative w-12 h-6 rounded-full transition-all duration-300 ease-in-out shadow-inner md:w-14 md:h-7",
+            role="switch"
+            aria-checked={isNHIS}
+            aria-label="Use NHIS pricing"
+            className={cn(
+              "relative w-12 h-6 rounded-full transition-all duration-300 ease-in-out shadow-inner md:w-14 md:h-7",
                 isNHIS
                   ? "bg-success shadow-success/30"
                   : "bg-muted"
@@ -308,13 +300,11 @@ const Header = () => {
               onChange={(e) => handlePatientNameChange(e.target.value)}
               onBlur={handlePatientNameBlur}
               placeholder="Enter patient name..."
-              disabled={isValidatingPatient}
               aria-invalid={!!patientNameError}
               aria-describedby={patientNameError ? "patient-error" : undefined}
               className={cn(
                 "h-9 px-3 rounded-lg glass-card text-sm w-full outline-none transition-all text-foreground placeholder:text-muted-foreground md:h-9 md:px-3 md:text-sm focus-visible:ring-2 focus-visible:ring-primary/30",
-                patientNameError ? "ring-2 ring-destructive/30 border-destructive/50" : "",
-                isValidatingPatient && "opacity-70 cursor-wait"
+                patientNameError ? "ring-2 ring-destructive/30 border-destructive/50" : ""
               )}
             />
             {patientNameError && (

@@ -282,7 +282,7 @@ const ReceiptModal = ({ onClose }: Props) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-foreground/30 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
-      <div className="glass-panel border border-border/50 w-full max-w-lg max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
+      <div id="receipt-print" className="glass-panel border border-border/50 w-full max-w-lg max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-border/50">
           <div className="flex items-start justify-between">
             <div>

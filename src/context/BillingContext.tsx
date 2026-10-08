@@ -74,10 +74,15 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch { return []; }
   });
 
-  // Persist receipt number to localStorage whenever it changes
+  // Persist receipt data outside state updaters so React StrictMode cannot duplicate side effects.
   useEffect(() => {
-    localStorage.setItem("pahc-receipt-number", receiptNumber.toString());
-  }, [receiptNumber]);
+    try {
+      localStorage.setItem("pahc-receipt-number", receiptNumber.toString());
+      localStorage.setItem("pahc-receipt-history", JSON.stringify(receiptHistory));
+    } catch {
+      // Storage failures should not prevent the till from remaining usable.
+    }
+  }, [receiptNumber, receiptHistory]);
 
   const { updateProduct } = useProducts();
 
@@ -139,8 +144,7 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     cart.forEach(item => {
       if (typeof item.product.stock === 'number') {
         const remaining = Math.max(0, item.product.stock - item.quantity);
-        const { id, ...productWithoutId } = item.product;
-        updateProduct(id, { ...productWithoutId, stock: remaining });
+        updateProduct(item.product.id, { stock: remaining });
       }
     });
 
@@ -163,11 +167,9 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     setReceiptHistory(prev => {
-      const updated = [record, ...prev].slice(0, 1000);
-      localStorage.setItem("pahc-receipt-history", JSON.stringify(updated));
-      return updated;
+      return [record, ...prev];
     });
-  }, [cart, receiptNumber, patientName, isNHIS]);
+  }, [cart, receiptNumber, patientName, isNHIS, updateProduct]);
 
   const newPatient = useCallback(() => {
     setCart([]);

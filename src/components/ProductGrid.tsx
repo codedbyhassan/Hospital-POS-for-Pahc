@@ -8,9 +8,9 @@ const ProductGrid = () => {
   const { products } = useProducts();
 
   const filtered = products.filter(p => {
-    if (p.category !== activeCategory) return false;
-    if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
+    const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = searchQuery ? true : p.category === activeCategory;
+    return matchesSearch && matchesCategory;
   });
 
   const getCartQty = (id: string) => {

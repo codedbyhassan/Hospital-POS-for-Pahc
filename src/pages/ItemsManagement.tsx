@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Edit, Trash2, Search, Package, Pill, Stethoscope } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { validateProductName, validateAmount, validateCategoryName } from "@/lib/validation";
+import { validateProductName, validateAmount, validateCategoryName, validateQuantity } from "@/lib/validation";
 import Header from "@/components/Header";
 
 interface ProductFormData {
@@ -124,8 +124,7 @@ const ItemsManagement = () => {
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const productData = {
+    const productData = {
         name: formData.name,
         category: formData.category,
         group: formData.group,
@@ -142,10 +141,9 @@ const ItemsManagement = () => {
         addProduct(productData);
       }
 
-      setIsAddDialogOpen(false);
-      resetForm();
-      setIsSubmitting(false);
-    }, 500);
+    setIsAddDialogOpen(false);
+    resetForm();
+    setIsSubmitting(false);
   };
 
   const handleEdit = (product: Product) => {
