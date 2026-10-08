@@ -224,7 +224,7 @@ const Header = () => {
               )}
             >
               <span className={cn(
-                "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300 ease-[cubic-bezier(0.68,-0.55,0.27,1.55)] md:top-0.5 md:w-6 md:h-6",
+                "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300 ease-in-out md:top-0.5 md:w-6 md:h-6",
                 isNHIS ? "left-[22px] md:left-[30px]" : "left-0.5"
               )} />
               <span className={cn(

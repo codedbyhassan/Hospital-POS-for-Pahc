@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import * as XLSX from "xlsx";
 
 interface Props {
   onClose: () => void;
@@ -219,7 +218,8 @@ const ReceiptModal = ({ onClose }: Props) => {
     doc.save(`PAHC_Receipt_${receiptNumber}.pdf`);
   };
 
-  const exportExcel = () => {
+  const exportExcel = async () => {
+    const XLSX = await import("xlsx");
     // Header info rows
     const headerRows = [
       ["Patricia Appiagyei Health Centre"],

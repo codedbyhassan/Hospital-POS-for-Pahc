@@ -1,5 +1,5 @@
 import { Product, Category } from "@/data/products";
-import { ReceiptRecord } from "@/context/BillingContext";
+import type { ReceiptRecord } from "@/context/BillingContext";
 
 export interface ExportData {
   version: string;
@@ -13,16 +13,29 @@ export const STORAGE_KEYS = {
   PRODUCTS: 'pahc-products',
   CATEGORIES: 'pahc-categories',
   RECEIPTS: 'pahc-receipt-history',
+  AUTO_BACKUP: 'pahc-auto-backup',
+  LAST_BACKUP: 'pahc-last-backup',
 } as const;
+
+const CURRENT_VERSION = '1.0.0';
+
+const readArray = <T>(key: string): T[] => {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+};
 
 // Export all data to JSON
 export const exportData = (): ExportData => {
-  const products = JSON.parse(localStorage.getItem(STORAGE_KEYS.PRODUCTS) || '[]');
-  const categories = JSON.parse(localStorage.getItem(STORAGE_KEYS.CATEGORIES) || '[]');
-  const receipts = JSON.parse(localStorage.getItem(STORAGE_KEYS.RECEIPTS) || '[]');
+  const products = readArray<Product>(STORAGE_KEYS.PRODUCTS);
+  const categories = readArray<Category>(STORAGE_KEYS.CATEGORIES);
+  const receipts = readArray<ReceiptRecord>(STORAGE_KEYS.RECEIPTS);
 
   return {
-    version: '1.0.0',
+    version: CURRENT_VERSION,
     timestamp: new Date().toISOString(),
     products,
     categories,
@@ -36,7 +49,7 @@ export const importData = (data: ExportData): { success: boolean; errors: string
 
   try {
     // Validate data structure
-    if (!data.version || !data.products || !data.categories || !data.receipts) {
+    if (!data || data.version !== CURRENT_VERSION || !Array.isArray(data.products) || !Array.isArray(data.categories) || !Array.isArray(data.receipts)) {
       errors.push('Invalid data format: missing required fields');
       return { success: false, errors };
     }
@@ -97,9 +110,12 @@ export const importData = (data: ExportData): { success: boolean; errors: string
       return { success: true, errors: [] };
     } catch (storageError) {
       // Restore backup on error
-      if (backup.products) localStorage.setItem(STORAGE_KEYS.PRODUCTS, backup.products);
-      if (backup.categories) localStorage.setItem(STORAGE_KEYS.CATEGORIES, backup.categories);
-      if (backup.receipts) localStorage.setItem(STORAGE_KEYS.RECEIPTS, backup.receipts);
+      if (backup.products === null) localStorage.removeItem(STORAGE_KEYS.PRODUCTS);
+      else localStorage.setItem(STORAGE_KEYS.PRODUCTS, backup.products);
+      if (backup.categories === null) localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
+      else localStorage.setItem(STORAGE_KEYS.CATEGORIES, backup.categories);
+      if (backup.receipts === null) localStorage.removeItem(STORAGE_KEYS.RECEIPTS);
+      else localStorage.setItem(STORAGE_KEYS.RECEIPTS, backup.receipts);
 
       errors.push('Failed to save data to localStorage');
       return { success: false, errors };
@@ -165,30 +181,30 @@ export const clearAllData = (): { success: boolean; errors: string[] } => {
 
 // Get data statistics
 export const getDataStats = () => {
-  const products = JSON.parse(localStorage.getItem(STORAGE_KEYS.PRODUCTS) || '[]');
-  const categories = JSON.parse(localStorage.getItem(STORAGE_KEYS.CATEGORIES) || '[]');
-  const receipts = JSON.parse(localStorage.getItem(STORAGE_KEYS.RECEIPTS) || '[]');
+  const products = readArray<Product>(STORAGE_KEYS.PRODUCTS);
+  const categories = readArray<Category>(STORAGE_KEYS.CATEGORIES);
+  const receipts = readArray<ReceiptRecord>(STORAGE_KEYS.RECEIPTS);
 
   return {
     productsCount: products.length,
     categoriesCount: categories.length,
     receiptsCount: receipts.length,
     totalRevenue: receipts.reduce((sum: number, receipt: ReceiptRecord) => sum + receipt.grandTotal, 0),
-    lastBackup: localStorage.getItem('pahc-last-backup') || null,
+    lastBackup: localStorage.getItem(STORAGE_KEYS.LAST_BACKUP) || null,
   };
 };
 
 // Auto-backup functionality
 export const performAutoBackup = () => {
   const data = exportData();
-  localStorage.setItem('pahc-auto-backup', JSON.stringify(data));
-  localStorage.setItem('pahc-last-backup', new Date().toISOString());
+  localStorage.setItem(STORAGE_KEYS.AUTO_BACKUP, JSON.stringify(data));
+  localStorage.setItem(STORAGE_KEYS.LAST_BACKUP, new Date().toISOString());
 };
 
 // Restore from auto-backup
 export const restoreFromAutoBackup = (): { success: boolean; errors: string[] } => {
   try {
-    const backupData = localStorage.getItem('pahc-auto-backup');
+    const backupData = localStorage.getItem(STORAGE_KEYS.AUTO_BACKUP);
     if (!backupData) {
       return { success: false, errors: ['No auto-backup found'] };
     }

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { Product, Category, categories as defaultCategories } from "@/data/products";
+import { Product, Category, categories as defaultCategories, products as defaultProducts } from "@/data/products";
 
 interface ProductContextType {
   products: Product[];
@@ -40,10 +40,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     } else {
       // Initialize with default products if none saved
-      import('@/data/products').then(({ products: defaultProducts }) => {
-        setProducts(defaultProducts);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultProducts));
-      });
+      setProducts(defaultProducts);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultProducts));
     }
 
     if (savedCategories) {
